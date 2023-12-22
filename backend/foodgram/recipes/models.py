@@ -183,7 +183,7 @@ class Favorite(Model):
     )
 
     class Meta:
-        ordering =['-id']
+        ordering = ['-id']
         verbose_name = 'Избранное'
         verbose_name_plural = 'Избранные'
 
