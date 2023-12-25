@@ -66,6 +66,14 @@ class IngredientPostSerializer(ModelSerializer):
         fields = ('id', 'amount')
 
 
+class ShortRecipeGetSerializer(ModelSerializer):
+    # Получение краткой информации о рецепте (в избранном и корзине), метод GET
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name',
+                  'image', 'cooking_time',)
+
+
 class RecipeGetSerializer(ModelSerializer):
     # Получение информации о рецепте с ингредиентами, метод GET
     # author =  Добавить после сериализатора

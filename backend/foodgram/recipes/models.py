@@ -10,9 +10,6 @@ from django.db.models import (
     PositiveSmallIntegerField,
     BooleanField
 )
-from django.db.validators import (
-    MinValueValidator,
-)
 from django.db.models.constraints import (
     UniqueConstraint
 )
