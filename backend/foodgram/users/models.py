@@ -1,4 +1,7 @@
-from django.contrib.auth.models import AbstractUser
+from django.contrib.auth.models import (
+    AbstractUser,
+    Model
+)
 from django.db.models import (
     CharField,
     EmailField,
@@ -7,8 +10,16 @@ from django.db.models import (
     CASCADE,
 )
 
+ADMIN = 'admin'
+USER = 'user'
+
 
 class User(AbstractUser):
+    # Кастомная модель пользователя
+    ROLE_CHOICES = (
+        (USER, 'Пользователь'),
+        (ADMIN, 'Администратор'),
+    )
 
     username = CharField(
         'Юзернейм пользователя',
@@ -42,6 +53,12 @@ class User(AbstractUser):
         blank=False,
         null=False,
     )
+    role = CharField(
+        'Роль',
+        max_length=20,
+        choices=ROLE_CHOICES,
+        default=USER,
+    )
 
     class Meta:
         ordering = ['id']
@@ -51,9 +68,17 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    @property
+    def is_admin(self):
+        return self.role == ADMIN
+
+    @property
+    def is_user(self):
+        return self.role == USER
+
 
 class Subscription(Model):
-
+    # Модель подписки
     user = ForeignKey(
         'Пользователь',
         User,

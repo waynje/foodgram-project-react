@@ -15,8 +15,9 @@ from django.db.models.constraints import (
 )
 from django.contrib.auth import get_user_model
 
-User = get_user_model()
-# Заменить на кастомную модель
+from users.models import (
+    User
+)
 
 
 class Tags(Model):
@@ -144,7 +145,7 @@ class RecipeIngredients(Model):
         ]
 
 
-class Shopping_cart(Model):
+class Shoppingcart(Model):
     # Модель корзины
     recipe = ForeignKey(
         Recipe,

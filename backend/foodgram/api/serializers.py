@@ -1,8 +1,12 @@
+import re
 # from drf_base64.fields import Base64ImageField
+from djoser.serializers import (
+    UserCreateSerializer,
+    UserSerializer,
+)
 from rest_framework.serializers import (
     ModelSerializer,
     IntegerField,
-    CharField,
     PrimaryKeyRelatedField,
     ReadOnlyField,
     ValidationError,
@@ -20,9 +24,93 @@ from recipes.models import (
     Recipe,
     Ingredient,
     RecipeIngredients,
-    Shopping_cart,
+    Shoppingcart,
     Favorite
 )
+from users.models import (
+    User,
+    Subscription,
+)
+
+
+class UserCreateSerializer(UserCreateSerializer):
+    # Создание юзера через djoser
+    class Meta:
+        model = User
+        fields = ('__all__')
+
+    def validate_username(self, username):
+        if username == 'me':
+            raise ValidationError('Недопустимый username.')
+        if not re.match(r'^[\w.@+-]+\Z', username):
+            raise ValidationError('Недопустимые символы.')
+        return username
+
+
+class UserGetSerializer(UserSerializer):
+    # Получение информации о пользователе, метод GET
+    is_subscribed = SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = ('first_name', 'last_name',
+                  'is_subscribed', 'id',
+                  'username', 'email',
+                  )
+
+    def get_is_subscribed(self, obj):
+        request = self.context.get('request')
+        return (request.user.is_authenticated and
+                Subscription.objects.filter(
+                    user=request.user, author=obj
+                ).exists())
+
+
+class UserSubscriptionSerializer(ModelSerializer):
+    # Подписка на пользователя, метод POST
+    class Meta:
+        model = Subscription
+        fields = ('__all__')
+        validator = [
+            UniqueTogetherValidator(
+                queryset=Subscription.object.all(),
+                fields=('user', 'author'),
+                message='Вы уже подписаны на данного пользователя.'
+            )
+        ]
+
+    def validate(self, data):
+        request = self.context.get('request')
+        if request.user != data['author']:
+            return data
+        raise ValidationError('Нельзя подписаться на самого себя.')
+
+
+class UserSubscriptionsGetSerializer(UserGetSerializer):
+    # Получение информации о подписках пользователя, метод GET
+    is_subscribed = SerializerMethodField()
+    recipes = SerializerMethodField()
+    recipes_count = SerializerMethodField()
+
+    class Meta:
+        model = User
+        read_only_fields = (
+            'first_name', 'last_name',
+            'username', 'email',
+            'id', 'is_subscribed',
+            'recipes', 'recipes_count'
+        )
+
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes = obj.recipes.all()
+        return ShortRecipeGetSerializer(
+            recipes,
+            many=True,
+            context={'request': request}).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
 
 class TagsSerializer(ModelSerializer):
@@ -76,7 +164,7 @@ class ShortRecipeGetSerializer(ModelSerializer):
 
 class RecipeGetSerializer(ModelSerializer):
     # Получение информации о рецепте с ингредиентами, метод GET
-    # author =  Добавить после сериализатора
+    author = UserGetSerializer(read_only=True)
     tags = TagsSerializer(
         many=True,
         read_only=True,
@@ -106,7 +194,7 @@ class RecipeGetSerializer(ModelSerializer):
         # Определяем, добавлен ли данный рецепт в корзину
         request = self.context.get('request')
         return (request and request.user.is_authenticated
-                and Shopping_cart.objects.filter(
+                and Shoppingcart.objects.filter(
                     user=request.user, recipe=obj
                 ).exists())
 
@@ -162,11 +250,11 @@ class FavoriteSerializer(ModelSerializer):
 class ShoppingCartSerializer(ModelSerializer):
     # Сериализатор для корзины
     class Meta:
-        model = Shopping_cart
+        model = Shoppingcart
         fields = '__all__'
         validators = [
             UniqueTogetherValidator(
-                queryset=Shopping_cart.objects.all(),
+                queryset=Shoppingcart.objects.all(),
                 fields=('user', 'recipe'),
                 message='Рецепт уже добавлен в список покупок'
             )
