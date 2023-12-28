@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.viewsets import (
     ModelViewSet,
-    ReadOnlyModelViewSet,
     GenericViewSet,
     ViewSet
 )
@@ -15,8 +14,6 @@ from rest_framework.permissions import (
 from rest_framework.response import Response
 from rest_framework.mixins import (
     ListModelMixin,
-    CreateModelMixin,
-    DestroyModelMixin
 )
 
 from .filters import (
@@ -43,7 +40,6 @@ from .mixins import (
 from recipes.models import (
     Tags,
     Recipe,
-    RecipeIngredients,
     Ingredients,
     Shoppingcart,
     Favorite,
@@ -73,7 +69,7 @@ class RecipeViewSet(ModelViewSet):
     queryset = Recipe.objects.all()
     filterset_class = RecipeFilter
     filters_backend = (DjangoFilterBackend,)
-    permission_classes = [IsAdminAuthorOrReadOnly,]
+    permission_classes = [IsAdminAuthorOrReadOnly, ]
     http_method_names = ['get', 'post', 'patch', 'delete']
 
     def get_serializer_class(self):
