@@ -22,7 +22,7 @@ from .utils import (
 from recipes.models import (
     Tags,
     Recipe,
-    Ingredient,
+    Ingredients,
     RecipeIngredients,
     Shoppingcart,
     Favorite
@@ -73,7 +73,7 @@ class UserSubscriptionSerializer(ModelSerializer):
         fields = ('__all__')
         validator = [
             UniqueTogetherValidator(
-                queryset=Subscription.object.all(),
+                queryset=Subscription.objects.all(),
                 fields=('user', 'author'),
                 message='Вы уже подписаны на данного пользователя.'
             )
@@ -123,7 +123,7 @@ class TagsSerializer(ModelSerializer):
 class IngredientSerializer(ModelSerializer):
     # Сериализатор для модели ингредиента, метод GET
     class Meta:
-        model = Ingredient
+        model = Ingredients
         fields = '__all__'
 
 

@@ -1,10 +1,14 @@
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import status
+from rest_framework.decorators import action
 from rest_framework.viewsets import (
     ModelViewSet,
     ReadOnlyModelViewSet,
-    GenericViewSet
+    GenericViewSet,
+    ViewSet
 )
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import (
     AllowAny,
 )
@@ -14,7 +18,6 @@ from rest_framework.mixins import (
     CreateModelMixin,
     DestroyModelMixin
 )
-from rest_framework.status import status
 
 from .filters import (
     IngredientFilter,
@@ -23,15 +26,10 @@ from .filters import (
 from .serializers import (
     TagsSerializer,
     RecipeGetSerializer,
-    ShortRecipeGetSerializer,
     RecipePostSerializer,
-    IngredientGetSerializer,
-    IngredientPostSerializer,
     IngredientSerializer,
     ShoppingCartSerializer,
     FavoriteSerializer,
-    UserCreateSerializer,
-    UserGetSerializer,
     UserSubscriptionSerializer,
     UserSubscriptionsGetSerializer
 )
@@ -46,7 +44,7 @@ from recipes.models import (
     Tags,
     Recipe,
     RecipeIngredients,
-    Ingredient,
+    Ingredients,
     Shoppingcart,
     Favorite,
 )
@@ -64,7 +62,7 @@ class TagsViewSet(TagsIngredientMixin):
 
 class IngredientViewSet(TagsIngredientMixin):
     # Получение информации об ингредиентах
-    queryset = Ingredient.objects.all()
+    queryset = Ingredients.objects.all()
     serializer_class = IngredientSerializer
     filterset_class = IngredientFilter
     filters_backend = (DjangoFilterBackend,)
@@ -72,7 +70,7 @@ class IngredientViewSet(TagsIngredientMixin):
 
 class RecipeViewSet(ModelViewSet):
     # Получение информации о рецептах
-    queryset = Recipe.object.all()
+    queryset = Recipe.objects.all()
     filterset_class = RecipeFilter
     filters_backend = (DjangoFilterBackend,)
     permission_classes = [IsAdminAuthorOrReadOnly,]
@@ -83,14 +81,8 @@ class RecipeViewSet(ModelViewSet):
             return RecipeGetSerializer
         return RecipePostSerializer
 
-
-class UserSubscriptionViewSet(ListModelMixin,
-                              GenericViewSet):
-    # Получение информации о подписках пользователя
-    serializer_class = UserSubscriptionsGetSerializer
-
-    def get_queryset(self):
-        return User.objects.filter(following__user=self.request.user)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 class ShoppingCartViewSet(ShoppingFavoriteMixin):
@@ -101,6 +93,7 @@ class ShoppingCartViewSet(ShoppingFavoriteMixin):
         user = self.request.user.id
         return Shoppingcart.objects.filter(user=user)
 
+    @action(methods=('delete',), detail=True)
     def delete(self, request, recipe_id):
         user = request.user
         if not user.shoppingcart.select_related(
@@ -122,6 +115,7 @@ class FavoriteViewSet(ShoppingFavoriteMixin):
         user = self.request.user.id
         return Favorite.objects.filter(user=user)
 
+    @action(methods=('delete',), detail=True)
     def delete(self, request, recipe_id):
         user = request.user
         if not user.favorite.select_related(
@@ -132,4 +126,61 @@ class FavoriteViewSet(ShoppingFavoriteMixin):
         get_object_or_404(Favorite,
                           user=request.user,
                           recipe=recipe_id).delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+class UserSubscriptionViewSet(ListModelMixin,
+                              GenericViewSet):
+    # Получение информации о подписках пользователя
+    serializer_class = UserSubscriptionsGetSerializer
+
+    def get_queryset(self):
+        return User.objects.filter(following__user=self.request.user)
+
+
+class SubscriptionViewSet(ViewSet):
+    serializer_class = UserSubscriptionSerializer
+
+    def get_user(self, pk):
+        return get_object_or_404(User, id=pk)
+
+    def get_serializer(self, *args, **kwargs):
+        return self.serializer_class(*args, **kwargs)
+
+    @action(detail=False, methods=['get'], url_path='subscriptions',
+            url_name='list_subscriptions')
+    def list_subscriptions(self, request):
+        queryset = Subscription.objects.filter(
+            user=request.user).order_by('-pk')
+        paginator = PageNumberPagination()
+        paginated_queryset = paginator.paginate_queryset(queryset, request)
+        serializer = self.get_serializer(paginated_queryset,
+                                         context={'request': request},
+                                         many=True)
+        return paginator.get_paginated_response(serializer.data)
+
+    @action(detail=True, methods=['post'], url_path='subscribe',
+            url_name='subscribe')
+    def subscribe(self, request, pk=None):
+        target_user = self.get_user(pk)
+        serializer = UserSubscriptionSerializer(
+            data={'author': target_user.id},
+            context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        subscription = serializer.save(user=request.user)
+        return Response(UserSubscriptionSerializer(
+            subscription,
+            context={'request': request}).data,
+            status=status.HTTP_201_CREATED)
+
+    @action(detail=True, methods=['delete'], url_path='subscribe',
+            url_name='unsubscribe')
+    def unsubscribe(self, request, pk=None):
+        target_user = self.get_user(pk)
+        serializer = UserSubscriptionSerializer(
+            data={'author': target_user.id}, context={'request': request})
+        serializer.is_valid(raise_exception=True)
+        subscription = Subscription.objects.get(
+            user=request.user, author=target_user)
+        subscription.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)

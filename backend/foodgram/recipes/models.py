@@ -1,38 +1,25 @@
-from django.db.models import (
-    Model,
-    CharField,
-    TextField,
-    SlugField,
-    ForeignKey,
-    ManyToManyField,
-    ImageField,
-    CASCADE,
-    PositiveSmallIntegerField,
-    BooleanField
-)
+from django.contrib.auth import get_user_model
+from django.db import models
 from django.db.models.constraints import (
     UniqueConstraint
 )
-from django.contrib.auth import get_user_model
 
-from users.models import (
-    User
-)
+User = get_user_model()
 
 
-class Tags(Model):
+class Tags(models.Model):
     # Модель тега
-    name = CharField(
+    name = models.CharField(
         'Название',
         max_length=56,
         unique=True,
     )
-    color = CharField(
+    color = models.CharField(
         'Цвет',
         max_length=7,
         unique=True,
     )
-    slug = SlugField(
+    slug = models.SlugField(
         'Слаг',
         max_length=56,
         unique=True,
@@ -46,14 +33,14 @@ class Tags(Model):
         return self.name
 
 
-class Ingredient(Model):
+class Ingredients(models.Model):
     # Модель ингредиента
-    name = CharField(
+    name = models.CharField(
         'Название',
         max_length=56,
         unique=True,
     )
-    measurement_unit = CharField(
+    measurement_unit = models.CharField(
         'Единица измерения',
         max_length=56,
     )
@@ -66,43 +53,44 @@ class Ingredient(Model):
         return self.name
 
 
-class Recipe(Model):
+class Recipe(models.Model):
     # Модель рецепта, связь с ингредиентами идет через связь многие ко многим
-    author = ForeignKey(
+    author = models.ForeignKey(
         User,
-        on_delete=CASCADE,
+        on_delete=models.CASCADE,
         related_name='recipes',
         verbose_name='Автор',
     )
-    name = CharField(
+    name = models.CharField(
         'Название',
         max_length=225,
     )
-    image = ImageField(
+    image = models.ImageField(
         'Изображение',
         upload_to='foodgram/images/',
         blank=True,
     )
-    ingredients = ManyToManyField(
-        Ingredient,
+    ingredients = models.ManyToManyField(
+        Ingredients,
         through='RecipeIngredients',
+        through_fields=('recipe', 'ingredient'),
         verbose_name='Ингредиенты',
     )
-    tags = ManyToManyField(
+    tags = models.ManyToManyField(
         Tags,
         verbose_name='Теги',
     )
-    cooking_time = PositiveSmallIntegerField(
+    cooking_time = models.PositiveSmallIntegerField(
         'Время приготовления',
     )
-    text = TextField(
+    text = models.TextField(
         'Текст',
     )
-    is_favorited = BooleanField(
+    is_favorited = models.BooleanField(
         'В избранном',
         default=False,
     )
-    is_in_shopping_cart = BooleanField(
+    is_in_shopping_cart = models.BooleanField(
         'В корзине',
         default=False,
     )
@@ -116,21 +104,21 @@ class Recipe(Model):
         return self.name
 
 
-class RecipeIngredients(Model):
+class RecipeIngredients(models.Model):
     # Промежуточная таблица, связывающая рецепты и ингредиенты
-    recipe = ForeignKey(
+    recipe = models.ForeignKey(
         Recipe,
-        on_delete=CASCADE,
+        on_delete=models.CASCADE,
         related_name='recipeingredients',
-        verbose_name='Рецепт',
+        verbose_name='Рецепт'
     )
-    ingredient = ForeignKey(
-        Ingredient,
-        on_delete=CASCADE,
+    ingredient = models.ForeignKey(
+        Ingredients,
+        on_delete=models.CASCADE,
         related_name='recipeingredients',
-        verbose_name='Ингредиент',
+        verbose_name='Ингредиент'
     )
-    amount = PositiveSmallIntegerField(
+    amount = models.PositiveSmallIntegerField(
         'Количество',
     )
 
@@ -139,22 +127,22 @@ class RecipeIngredients(Model):
         verbose_name_plural = 'Ингредиенты из рецепта'
         constraints = [
             UniqueConstraint(
-                fields=['ingredients', 'recipe'],
+                fields=['ingredient', 'recipe'],
                 name='unique_ingredients'
             )
         ]
 
 
-class Shoppingcart(Model):
+class Shoppingcart(models.Model):
     # Модель корзины
-    recipe = ForeignKey(
+    recipe = models.ForeignKey(
         Recipe,
-        on_delete=CASCADE,
+        on_delete=models.CASCADE,
         related_name='shoppingrecipe',
     )
-    user = ForeignKey(
+    user = models.ForeignKey(
         User,
-        on_delete=CASCADE,
+        on_delete=models.CASCADE,
         related_name='shoppingrecipe',
     )
 
@@ -167,16 +155,16 @@ class Shoppingcart(Model):
         return f'{self.user.username} добавил {self.recipe.name} в корзину.'
 
 
-class Favorite(Model):
+class Favorite(models.Model):
     # Модель избранных рецептов
-    recipe = ForeignKey(
+    recipe = models.ForeignKey(
         Recipe,
-        on_delete=CASCADE,
+        on_delete=models.CASCADE,
         related_name='favoriterecipe',
     )
-    user = ForeignKey(
+    user = models.ForeignKey(
         User,
-        on_delete=CASCADE,
+        on_delete=models.CASCADE,
         related_name='favoriterecipe',
     )
 

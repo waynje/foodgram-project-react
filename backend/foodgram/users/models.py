@@ -1,14 +1,5 @@
-from django.contrib.auth.models import (
-    AbstractUser,
-    Model
-)
-from django.db.models import (
-    CharField,
-    EmailField,
-    ForeignKey,
-    UniqueConstraint,
-    CASCADE,
-)
+from django.contrib.auth.models import AbstractUser
+from django.db import models
 
 ADMIN = 'admin'
 USER = 'user'
@@ -21,39 +12,39 @@ class User(AbstractUser):
         (ADMIN, 'Администратор'),
     )
 
-    username = CharField(
+    username = models.CharField(
         'Юзернейм пользователя',
         max_length=254,
         unique=True,
         blank=True,
         null=False
     )
-    first_name = CharField(
+    first_name = models.CharField(
         'Имя пользователя',
         max_length=254,
         blank=False,
         null=False,
     )
-    last_name = CharField(
+    last_name = models.CharField(
         'Фамилия пользователя',
         max_length=254,
         blank=False,
         null=False,
     )
-    password = CharField(
+    password = models.CharField(
         'Пароль',
         max_length=254,
         blank=False,
         null=False,
     )
-    email = EmailField(
+    email = models.EmailField(
         'Электронная почта',
         max_length=254,
         unique=True,
         blank=False,
         null=False,
     )
-    role = CharField(
+    role = models.CharField(
         'Роль',
         max_length=20,
         choices=ROLE_CHOICES,
@@ -77,24 +68,24 @@ class User(AbstractUser):
         return self.role == USER
 
 
-class Subscription(Model):
+class Subscription(models.Model):
     # Модель подписки
-    user = ForeignKey(
-        'Пользователь',
+    user = models.ForeignKey(
         User,
-        on_delete=CASCADE,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
         related_name='follower',
     )
-    author = ForeignKey(
-        'Автор',
+    author = models.ForeignKey(
         User,
-        on_delete=CASCADE,
+        on_delete=models.CASCADE,
+        verbose_name='Автор',
         related_name='following',
     )
 
     class Meta:
         constraints = [
-            UniqueConstraint(
+            models.UniqueConstraint(
                 fields=['user', 'author'],
                 name='unique_user_author',
             )
