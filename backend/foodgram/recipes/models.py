@@ -67,7 +67,7 @@ class Recipe(models.Model):
     )
     image = models.ImageField(
         'Изображение',
-        upload_to='foodgram/images/',
+        upload_to='media/',
         blank=True,
     )
     ingredients = models.ManyToManyField(
