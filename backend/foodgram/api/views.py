@@ -6,17 +6,18 @@ from rest_framework.mixins import ListModelMixin
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet, GenericViewSet, ViewSet
+from rest_framework.viewsets import GenericViewSet, ModelViewSet, ViewSet
 
-from recipes.models import (Tag, Recipe, Ingredient,
-                            Shoppingcart, Favorite, Subscription)
+from recipes.models import (Favorite, Ingredient, Recipe, Shoppingcart,
+                            Subscription, Tag)
 from users.models import User
+
 from .filters import IngredientFilter, RecipeFilter
-from .mixins import TagsIngredientMixin, ShoppingFavoriteMixin
+from .mixins import ShoppingFavoriteMixin, TagsIngredientMixin
 from .permissions import IsAdminAuthorOrReadOnly
-from .serializers import (TagsSerializer, RecipeGetSerializer,
-                          RecipePostSerializer, IngredientSerializer,
-                          ShoppingCartSerializer, FavoriteSerializer,
+from .serializers import (FavoriteSerializer, IngredientSerializer,
+                          RecipeGetSerializer, RecipePostSerializer,
+                          ShoppingCartSerializer, TagsSerializer,
                           UserSubscriptionSerializer,
                           UserSubscriptionsGetSerializer)
 from .utils import create_model_instance, delete_model_instance

@@ -1,21 +1,16 @@
 import re
 
-from djoser.serializers import (
-    UserCreateSerializer,
-    UserSerializer,
-)
-from rest_framework.serializers import (ModelSerializer, IntegerField,
-                                        PrimaryKeyRelatedField,
-                                        ReadOnlyField, ValidationError,
-                                        SerializerMethodField)
+from djoser.serializers import UserCreateSerializer, UserSerializer
+from rest_framework.serializers import (IntegerField, ModelSerializer,
+                                        PrimaryKeyRelatedField, ReadOnlyField,
+                                        SerializerMethodField, ValidationError)
 from rest_framework.validators import UniqueTogetherValidator
 
+from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredients,
+                            Shoppingcart, Subscription, Tag)
+from users.models import User
 
 from .utils import Base64ImageField
-from recipes.models import (Tag, Recipe, Ingredient,
-                            RecipeIngredients, Shoppingcart,
-                            Favorite, Subscription)
-from users.models import User
 
 
 class UserCreateSerializer(UserCreateSerializer):
