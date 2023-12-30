@@ -2,52 +2,24 @@ from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.viewsets import (
-    ModelViewSet,
-    GenericViewSet,
-    ViewSet
-)
+from rest_framework.mixins import ListModelMixin
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.mixins import (
-    ListModelMixin,
-)
+from rest_framework.viewsets import ModelViewSet, GenericViewSet, ViewSet
 
-from .filters import (
-    IngredientFilter,
-    RecipeFilter,
-)
-from .serializers import (
-    TagsSerializer,
-    RecipeGetSerializer,
-    RecipePostSerializer,
-    IngredientSerializer,
-    ShoppingCartSerializer,
-    FavoriteSerializer,
-    UserSubscriptionSerializer,
-    UserSubscriptionsGetSerializer
-)
-from .permissions import (
-    IsAdminAuthorOrReadOnly
-)
-from .mixins import (
-    TagsIngredientMixin,
-    ShoppingFavoriteMixin
-)
-from recipes.models import (
-    Tag,
-    Recipe,
-    Ingredient,
-    Shoppingcart,
-    Favorite,
-    Subscription
-)
+from recipes.models import (Tag, Recipe, Ingredient,
+                            Shoppingcart, Favorite, Subscription)
 from users.models import User
-from .utils import (
-    create_model_instance,
-    delete_model_instance
-)
+from .filters import IngredientFilter, RecipeFilter
+from .mixins import TagsIngredientMixin, ShoppingFavoriteMixin
+from .permissions import IsAdminAuthorOrReadOnly
+from .serializers import (TagsSerializer, RecipeGetSerializer,
+                          RecipePostSerializer, IngredientSerializer,
+                          ShoppingCartSerializer, FavoriteSerializer,
+                          UserSubscriptionSerializer,
+                          UserSubscriptionsGetSerializer)
+from .utils import create_model_instance, delete_model_instance
 
 
 class TagsViewSet(TagsIngredientMixin):

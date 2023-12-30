@@ -1,15 +1,7 @@
 from django.shortcuts import get_object_or_404
-from rest_framework.viewsets import (
-    ReadOnlyModelViewSet,
-    GenericViewSet
-)
-from rest_framework.permissions import (
-    AllowAny,
-)
-from rest_framework.mixins import (
-    CreateModelMixin,
-    DestroyModelMixin,
-)
+from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
+from rest_framework.permissions import AllowAny
+from rest_framework.viewsets import ReadOnlyModelViewSet, GenericViewSet
 
 from recipes.models import Recipe
 

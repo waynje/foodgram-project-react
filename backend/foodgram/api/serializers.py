@@ -1,32 +1,20 @@
 import re
+
 from djoser.serializers import (
     UserCreateSerializer,
     UserSerializer,
 )
-from rest_framework.serializers import (
-    ModelSerializer,
-    IntegerField,
-    PrimaryKeyRelatedField,
-    ReadOnlyField,
-    ValidationError,
-    SerializerMethodField,
-)
-from rest_framework.validators import (
-    UniqueTogetherValidator,
-)
+from rest_framework.serializers import (ModelSerializer, IntegerField,
+                                        PrimaryKeyRelatedField,
+                                        ReadOnlyField, ValidationError,
+                                        SerializerMethodField)
+from rest_framework.validators import UniqueTogetherValidator
 
-from .utils import (
-    Base64ImageField
-)
-from recipes.models import (
-    Tag,
-    Recipe,
-    Ingredient,
-    RecipeIngredients,
-    Shoppingcart,
-    Favorite,
-    Subscription
-)
+
+from .utils import Base64ImageField
+from recipes.models import (Tag, Recipe, Ingredient,
+                            RecipeIngredients, Shoppingcart,
+                            Favorite, Subscription)
 from users.models import User
 
 
@@ -151,7 +139,7 @@ class IngredientPostSerializer(ModelSerializer):
 
 
 class ShortRecipeGetSerializer(ModelSerializer):
-    """Получение краткой информации о рецепте (в избранном и корзине), метод GET."""
+    """Получение краткой информации о рецепте (в избранном и корзине)."""
     class Meta:
         model = Recipe
         fields = ('id', 'name',
