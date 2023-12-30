@@ -6,41 +6,14 @@ USER = 'user'
 
 
 class User(AbstractUser):
-    # Кастомная модель пользователя
+    """Кастомная модель пользователя."""
     ROLE_CHOICES = (
         (USER, 'Пользователь'),
         (ADMIN, 'Администратор'),
     )
-
-    username = models.CharField(
-        'Юзернейм пользователя',
-        max_length=254,
-        unique=True,
-        blank=True,
-        null=False
-    )
-    first_name = models.CharField(
-        'Имя пользователя',
-        max_length=254,
-        blank=False,
-        null=False,
-    )
-    last_name = models.CharField(
-        'Фамилия пользователя',
-        max_length=254,
-        blank=False,
-        null=False,
-    )
     password = models.CharField(
         'Пароль',
         max_length=254,
-        blank=False,
-        null=False,
-    )
-    email = models.EmailField(
-        'Электронная почта',
-        max_length=254,
-        unique=True,
         blank=False,
         null=False,
     )
