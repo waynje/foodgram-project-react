@@ -11,15 +11,13 @@ from rest_framework.mixins import (
     DestroyModelMixin,
 )
 
-from recipes.models import (
-    Recipe,
-)
+from recipes.models import Recipe
 
 
 class ShoppingFavoriteMixin(CreateModelMixin,
                             DestroyModelMixin,
                             GenericViewSet):
-    # Миксин для избранного и для корзины
+    """Миксин для избранного и для корзины."""
     def get_serializer_context(self):
         context = super().get_serializer_context()
         context['recipe_id'] = self.kwargs.get('recipe_id')
@@ -36,6 +34,6 @@ class ShoppingFavoriteMixin(CreateModelMixin,
 
 
 class TagsIngredientMixin(ReadOnlyModelViewSet):
-    # Миксин для тегов и ингредиентов
+    """Миксин для тегов и ингредиентов."""
     permission_classes = (AllowAny,)
     pagination_class = None

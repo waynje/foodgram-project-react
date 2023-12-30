@@ -8,6 +8,7 @@ from rest_framework.viewsets import (
     ViewSet
 )
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.mixins import (
     ListModelMixin,
@@ -35,34 +36,36 @@ from .mixins import (
     ShoppingFavoriteMixin
 )
 from recipes.models import (
-    Tags,
+    Tag,
     Recipe,
-    Ingredients,
+    Ingredient,
     Shoppingcart,
     Favorite,
-)
-from users.models import (
-    User,
     Subscription
+)
+from users.models import User
+from .utils import (
+    create_model_instance,
+    delete_model_instance
 )
 
 
 class TagsViewSet(TagsIngredientMixin):
-    # Получение информации о тегах
-    queryset = Tags.objects.all()
+    """Получение информации о тегах."""
+    queryset = Tag.objects.all()
     serializer_class = TagsSerializer
 
 
 class IngredientViewSet(TagsIngredientMixin):
-    # Получение информации об ингредиентах
-    queryset = Ingredients.objects.all()
+    """Получение информации об ингредиентах."""
+    queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     filterset_class = IngredientFilter
     filters_backend = (DjangoFilterBackend,)
 
 
 class RecipeViewSet(ModelViewSet):
-    # Получение информации о рецептах
+    """Получение информации о рецептах."""
     queryset = Recipe.objects.all()
     filterset_class = RecipeFilter
     filters_backend = (DjangoFilterBackend,)
@@ -77,54 +80,63 @@ class RecipeViewSet(ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
 
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[IsAuthenticated, ]
+    )
+    def favorite(self, request, pk):
+        """Работа с избранными рецептами.
+        Удаление/добавление в избранное."""
+        recipe = get_object_or_404(Recipe, id=pk)
+        if request.method == 'POST':
+            return create_model_instance(request, recipe, FavoriteSerializer)
+
+        if request.method == 'DELETE':
+            error_message = 'У вас нет этого рецепта в избранном'
+            return delete_model_instance(request, Favorite,
+                                         recipe, error_message)
+
+    @action(
+        detail=True,
+        methods=['post', 'delete'],
+        permission_classes=[IsAuthenticated, ]
+    )
+    def shopping_cart(self, request, pk):
+        """Работа со списком покупок.
+        Удаление/добавление в список покупок."""
+        recipe = get_object_or_404(Recipe, id=pk)
+        if request.method == 'POST':
+            return create_model_instance(request, recipe,
+                                         ShoppingCartSerializer)
+
+        if request.method == 'DELETE':
+            error_message = 'У вас нет этого рецепта в списке покупок'
+            return delete_model_instance(request, Shoppingcart,
+                                         recipe, error_message)
+
 
 class ShoppingCartViewSet(ShoppingFavoriteMixin):
-    # Получение информации о списке покупок
+    """Получение информации о списке покупок."""
     serializer_class = ShoppingCartSerializer
 
     def get_queryset(self):
         user = self.request.user.id
         return Shoppingcart.objects.filter(user=user)
 
-    @action(methods=('delete',), detail=True)
-    def delete(self, request, recipe_id):
-        user = request.user
-        if not user.shoppingcart.select_related(
-                'shoppingrecipe').filter(
-                    recipe_id=recipe_id).exists():
-            return Response({'errors': 'Рецепта нет в корзине'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        get_object_or_404(Shoppingcart,
-                          user=request.user,
-                          recipe=recipe_id).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class FavoriteViewSet(ShoppingFavoriteMixin):
-    # Получение информации об избранных рецептах
+    """Получение информации об избранных рецептах."""
     serializer_class = FavoriteSerializer
 
     def get_queryset(self):
         user = self.request.user.id
         return Favorite.objects.filter(user=user)
 
-    @action(methods=('delete',), detail=True)
-    def delete(self, request, recipe_id):
-        user = request.user
-        if not user.favorite.select_related(
-                'shoppingrecipe').filter(
-                    recipe_id=recipe_id).exists():
-            return Response({'errors': 'Рецепта нет в избранном'},
-                            status=status.HTTP_400_BAD_REQUEST)
-        get_object_or_404(Favorite,
-                          user=request.user,
-                          recipe=recipe_id).delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class UserSubscriptionViewSet(ListModelMixin,
                               GenericViewSet):
-    # Получение информации о подписках пользователя
+    """Получение информации о подписках пользователя."""
     serializer_class = UserSubscriptionsGetSerializer
 
     def get_queryset(self):
@@ -132,6 +144,7 @@ class UserSubscriptionViewSet(ListModelMixin,
 
 
 class SubscriptionViewSet(ViewSet):
+    """Работа с подписками."""
     serializer_class = UserSubscriptionSerializer
 
     def get_user(self, pk):

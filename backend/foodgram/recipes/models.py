@@ -7,8 +7,8 @@ from django.db.models.constraints import (
 User = get_user_model()
 
 
-class Tags(models.Model):
-    # Модель тега
+class Tag(models.Model):
+    """Модель тега."""
     name = models.CharField(
         'Название',
         max_length=56,
@@ -33,8 +33,8 @@ class Tags(models.Model):
         return self.name
 
 
-class Ingredients(models.Model):
-    # Модель ингредиента
+class Ingredient(models.Model):
+    """Модель ингредиента."""
     name = models.CharField(
         'Название',
         max_length=56,
@@ -54,7 +54,7 @@ class Ingredients(models.Model):
 
 
 class Recipe(models.Model):
-    # Модель рецепта, связь с ингредиентами идет через связь многие ко многим
+    """Модель рецепта, связь с ингредиентами идет через связь многие ко многим."""
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -71,13 +71,13 @@ class Recipe(models.Model):
         blank=True,
     )
     ingredients = models.ManyToManyField(
-        Ingredients,
+        Ingredient,
         through='RecipeIngredients',
         through_fields=('recipe', 'ingredient'),
         verbose_name='Ингредиенты',
     )
     tags = models.ManyToManyField(
-        Tags,
+        Tag,
         verbose_name='Теги',
     )
     cooking_time = models.PositiveSmallIntegerField(
@@ -85,14 +85,6 @@ class Recipe(models.Model):
     )
     text = models.TextField(
         'Текст',
-    )
-    is_favorited = models.BooleanField(
-        'В избранном',
-        default=False,
-    )
-    is_in_shopping_cart = models.BooleanField(
-        'В корзине',
-        default=False,
     )
 
     class Meta:
@@ -105,7 +97,7 @@ class Recipe(models.Model):
 
 
 class RecipeIngredients(models.Model):
-    # Промежуточная таблица, связывающая рецепты и ингредиенты
+    """Промежуточная таблица, связывающая рецепты и ингредиенты."""
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -113,7 +105,7 @@ class RecipeIngredients(models.Model):
         verbose_name='Рецепт'
     )
     ingredient = models.ForeignKey(
-        Ingredients,
+        Ingredient,
         on_delete=models.CASCADE,
         related_name='recipeingredients',
         verbose_name='Ингредиент'
@@ -134,7 +126,7 @@ class RecipeIngredients(models.Model):
 
 
 class Shoppingcart(models.Model):
-    # Модель корзины
+    """Модель корзины."""
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -156,7 +148,7 @@ class Shoppingcart(models.Model):
 
 
 class Favorite(models.Model):
-    # Модель избранных рецептов
+    """Модель избранных рецептов."""
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -175,3 +167,32 @@ class Favorite(models.Model):
 
     def __str__(self):
         return f'{self.user.username} добавил {self.recipe.name} в избраннное.'
+
+
+class Subscription(models.Model):
+    """Модель подписки."""
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Пользователь',
+        related_name='follower',
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        verbose_name='Автор',
+        related_name='following',
+    )
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=['user', 'author'],
+                name='unique_user_author',
+            )
+        ]
+        verbose_name = 'Подписка'
+        verbose_name_plural = 'Подписки'
+
+    def __str__(self):
+        return f'{self.user.usename} подписался на {self.author.username}.'
