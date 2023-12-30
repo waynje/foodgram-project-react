@@ -1,5 +1,4 @@
 import re
-# from drf_base64.fields import Base64ImageField
 from djoser.serializers import (
     UserCreateSerializer,
     UserSerializer,
@@ -20,27 +19,25 @@ from .utils import (
     Base64ImageField
 )
 from recipes.models import (
-    Tags,
+    Tag,
     Recipe,
-    Ingredients,
+    Ingredient,
     RecipeIngredients,
     Shoppingcart,
-    Favorite
+    Favorite,
+    Subscription
 )
-from users.models import (
-    User,
-    Subscription,
-)
+from users.models import User
 
 
 class UserCreateSerializer(UserCreateSerializer):
-    # Создание юзера через djoser
+    """Создание юзера через djoser."""
     class Meta:
         model = User
-        fields = ('__all__')
+        fields = '__all__'
 
     def validate_username(self, username):
-        if username == 'me':
+        if username.lower() == 'me':
             raise ValidationError('Недопустимый username.')
         if not re.match(r'^[\w.@+-]+\Z', username):
             raise ValidationError('Недопустимые символы.')
@@ -48,7 +45,7 @@ class UserCreateSerializer(UserCreateSerializer):
 
 
 class UserGetSerializer(UserSerializer):
-    # Получение информации о пользователе, метод GET
+    """Получение информации о пользователе, метод GET."""
     is_subscribed = SerializerMethodField()
 
     class Meta:
@@ -66,10 +63,10 @@ class UserGetSerializer(UserSerializer):
 
 
 class UserSubscriptionSerializer(ModelSerializer):
-    # Подписка на пользователя, метод POST
+    """Подписка на пользователя, метод POST."""
     class Meta:
         model = Subscription
-        fields = ('__all__')
+        fields = '__all__'
         validator = [
             UniqueTogetherValidator(
                 queryset=Subscription.objects.all(),
@@ -86,7 +83,7 @@ class UserSubscriptionSerializer(ModelSerializer):
 
 
 class UserSubscriptionsGetSerializer(UserGetSerializer):
-    # Получение информации о подписках пользователя, метод GET
+    """Получение информации о подписках пользователя, метод GET."""
     is_subscribed = SerializerMethodField()
     recipes = SerializerMethodField()
     recipes_count = SerializerMethodField()
@@ -113,21 +110,21 @@ class UserSubscriptionsGetSerializer(UserGetSerializer):
 
 
 class TagsSerializer(ModelSerializer):
-    # Сериализатор для модели тега, метод GET
+    """Сериализатор для модели тега, метод GET."""
     class Meta:
-        model = Tags
+        model = Tag
         exclude = ['id']
 
 
 class IngredientSerializer(ModelSerializer):
-    # Сериализатор для модели ингредиента, метод GET
+    """Сериализатор для модели ингредиента, метод GET."""
     class Meta:
-        model = Ingredients
+        model = Ingredient
         fields = '__all__'
 
 
 class IngredientGetSerializer(ModelSerializer):
-    # Получение информации об ингредиенте, метод GET
+    """Получение информации об ингредиенте, метод GET."""
     id = ReadOnlyField(
         source='ingredient.id',
     )
@@ -140,12 +137,12 @@ class IngredientGetSerializer(ModelSerializer):
 
     class Meta:
         model = RecipeIngredients
-        fields = ('__all__')
+        fields = '__all__'
 
 
 class IngredientPostSerializer(ModelSerializer):
-    # Добавление ингредиента в рецепт, метод POST
-    id = IntegerField()
+    """Добавление ингредиента в рецепт, метод POST."""
+    id = PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
     amount = IntegerField()
 
     class Meta:
@@ -154,7 +151,7 @@ class IngredientPostSerializer(ModelSerializer):
 
 
 class ShortRecipeGetSerializer(ModelSerializer):
-    # Получение краткой информации о рецепте (в избранном и корзине), метод GET
+    """Получение краткой информации о рецепте (в избранном и корзине), метод GET."""
     class Meta:
         model = Recipe
         fields = ('id', 'name',
@@ -162,7 +159,7 @@ class ShortRecipeGetSerializer(ModelSerializer):
 
 
 class RecipeGetSerializer(ModelSerializer):
-    # Получение информации о рецепте с ингредиентами, метод GET
+    """Получение информации о рецепте с ингредиентами, метод GET."""
     author = UserGetSerializer(read_only=True)
     tags = TagsSerializer(
         many=True,
@@ -179,10 +176,10 @@ class RecipeGetSerializer(ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ('__all__')
+        fields = '__all__'
 
     def get_is_favorited(self, obj):
-        # Определяем, добавлен ли данный рецепт в избранное
+        """Определяем, добавлен ли данный рецепт в избранное."""
         request = self.context.get('request')
         return (request and request.user.is_authenticated
                 and Favorite.objects.filter(
@@ -190,7 +187,7 @@ class RecipeGetSerializer(ModelSerializer):
                 ).exists())
 
     def get_is_in_shopping_cart(self, obj):
-        # Определяем, добавлен ли данный рецепт в корзину
+        """Определяем, добавлен ли данный рецепт в корзину."""
         request = self.context.get('request')
         return (request and request.user.is_authenticated
                 and Shoppingcart.objects.filter(
@@ -199,12 +196,11 @@ class RecipeGetSerializer(ModelSerializer):
 
 
 class RecipePostSerializer(ModelSerializer):
-    # Работа с рецептом, методы POST, PATCH, DELETE
+    """Работа с рецептом, методы POST, PATCH, DELETE."""
     tags = PrimaryKeyRelatedField(
         many=True,
-        queryset=Tags.objects.all()
+        queryset=Tag.objects.all()
     )
-    # author = Добавить после сериализатора
     ingredients = IngredientPostSerializer(
         many=True,
     )
@@ -221,7 +217,7 @@ class RecipePostSerializer(ModelSerializer):
         )
 
     def validate(self, obj):
-        # Проверка данных, принятых сериализатором.
+        """Проверка данных, принятых сериализатором."""
         if 'tags' not in obj:
             raise ValidationError(
                 'Нужно указать хотя бы 1 тег.'
@@ -233,7 +229,7 @@ class RecipePostSerializer(ModelSerializer):
 
 
 class FavoriteSerializer(ModelSerializer):
-    # Сериализатор для избранных рецептов
+    """Сериализатор для избранных рецептов."""
     class Meta:
         model = Favorite
         fields = '__all__'
@@ -247,7 +243,7 @@ class FavoriteSerializer(ModelSerializer):
 
 
 class ShoppingCartSerializer(ModelSerializer):
-    # Сериализатор для корзины
+    """Сериализатор для корзины."""
     class Meta:
         model = Shoppingcart
         fields = '__all__'
