@@ -1,37 +1,44 @@
 version: '3.3'
-services:
 
-  volumes:
-  pg_data_foodgram:
+volumes:
   static_foodgram:
   media_foodgram:
+  pg_data_foodgram:
+
+services:
 
   db:
-    image: postgres:13.0-alpine
-    volumes:
-      - pg_data_foodgram:/var/lib/postgresql/data/
+    platform: linux/amd64
+    image: postgres:13
     env_file:
       - ./.env
+    volumes:
+      - pg_data_foodgram:/var/lib/postgresql/data/
+    
 
-   backend:
+  backend:
+    platform: linux/amd64
     image: waynje/foodgram_backend
+    env_file:
+      - ./.env
     restart: always
     volumes:
       - static_foodgram:/app/static/
       - media_foodgram:/app/media/
     depends_on:
       - db
-    env_file:
-      - ./.env
+    
   
   frontend:
+    platform: linux/amd64
     build:
-      image: waynje/foodgram_frontend
+      context: ../frontend
       dockerfile: Dockerfile
     volumes:
       - ../frontend/:/app/result_build/
   
   nginx:
+    platform: linux/amd64
     image: nginx:1.19.3
     ports:
       - "80:80"
@@ -46,7 +53,4 @@ services:
       - frontend
     restart: always
   
-  volumes:
-  static_value:
-  media_value:
-  db_foodgram:
+
