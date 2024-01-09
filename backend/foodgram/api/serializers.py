@@ -180,10 +180,7 @@ class RecipeGetSerializer(ModelSerializer):
 
 class RecipePostSerializer(ModelSerializer):
     """Работа с рецептом, методы POST, PATCH, DELETE."""
-    tags = PrimaryKeyRelatedField(
-        many=True,
-        queryset=Tag.objects.all()
-    )
+    tags = TagsSerializer(many=True, read_only=True)
     ingredients = IngredientPostSerializer(
         many=True,
     )
