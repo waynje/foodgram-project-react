@@ -2,11 +2,10 @@ from django.db.models import Sum
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import status, mixins, viewsets
-from rest_framework.exceptions import ValidationError
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.mixins import ListModelMixin
-from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet
@@ -20,10 +19,9 @@ from .mixins import TagsIngredientMixin
 from .permissions import IsAdminAuthorOrReadOnly
 from .serializers import (FavoriteSerializer, IngredientSerializer,
                           RecipeGetSerializer, RecipePostSerializer,
-                          ShoppingCartSerializer, TagsSerializer,
+                          TagsSerializer,
                           UserSubscriptionSerializer,
                           UserSubscriptionsGetSerializer)
-from .utils import create_model_instance, delete_model_instance
 
 
 class TagsViewSet(TagsIngredientMixin):
@@ -99,8 +97,7 @@ class RecipeViewSet(ModelViewSet):
             user=get_object_or_404(User, id=self.request.user.id),
             recipe=get_object_or_404(Recipe, id=pk),
             method=request.method)
-    
-    
+
     # @action(
     #     detail=True,
     #     methods=['post', 'delete'],
