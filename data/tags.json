@@ -1,0 +1,7 @@
+[
+    {"name": "супы", "color": "#00b3dd", "slug": "soups"},
+    {"name": "второе блюдо", "color": "#c12a00", "slug": "second course"},
+    {"name": "салаты", "color": "#007400", "slug": "salads"},
+    {"name": "десерты", "color": "#f7ec16", "slug": "desserts"},
+    {"name": "закуски", "color": "#65a5a7", "slug": "snacks"}
+  ]

@@ -1,8 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.db import models
-from django.db.models.constraints import (
-    UniqueConstraint
-)
+from django.db.models.constraints import UniqueConstraint
 
 User = get_user_model()
 
@@ -38,7 +36,6 @@ class Ingredient(models.Model):
     name = models.CharField(
         'Название',
         max_length=56,
-        unique=True,
     )
     measurement_unit = models.CharField(
         'Единица измерения',
@@ -54,7 +51,7 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
-    """Модель рецепта, связь с ингредиентами идет через связь многие ко многим."""
+    """Модель рецепта, связь с ингредиентами методом многие ко многим."""
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
