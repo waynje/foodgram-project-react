@@ -1,8 +1,8 @@
 import csv
+
 from django.apps import apps
 from django.core.management import BaseCommand
 from django.shortcuts import get_object_or_404
-
 
 MODELS_FIELDS = {}
 

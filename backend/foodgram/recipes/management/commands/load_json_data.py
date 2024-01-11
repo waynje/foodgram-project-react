@@ -3,7 +3,6 @@ import json
 from django.apps import apps
 from django.core.management import BaseCommand
 
-
 MODELS_FIELDS = {}
 
 

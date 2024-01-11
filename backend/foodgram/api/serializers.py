@@ -3,17 +3,24 @@ import re
 from django.db import transaction
 from django.shortcuts import get_object_or_404
 from djoser.serializers import UserCreateSerializer, UserSerializer
-from rest_framework.serializers import (IntegerField, ModelSerializer,
-                                        PrimaryKeyRelatedField, ReadOnlyField,
-                                        SerializerMethodField, ValidationError,
-                                        CharField)
-from rest_framework.validators import UniqueTogetherValidator
-
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredients,
                             Shoppingcart, Subscription, Tag)
+from rest_framework.serializers import (CharField, IntegerField,
+                                        ModelSerializer,
+                                        PrimaryKeyRelatedField, ReadOnlyField,
+                                        SerializerMethodField, ValidationError)
+from rest_framework.validators import UniqueTogetherValidator
 from users.models import User
 
 from .utils import Base64ImageField
+
+
+class ShortRecipeGetSerializer(ModelSerializer):
+    """Получение краткой информации о рецепте (в избранном и корзине)."""
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name',
+                  'image', 'cooking_time',)
 
 
 class UserCreateSerializer(UserCreateSerializer):
@@ -68,34 +75,32 @@ class UserSubscriptionSerializer(ModelSerializer):
         raise ValidationError('Нельзя подписаться на самого себя.')
 
 
-# class UserSubscriptionsGetSerializer(UserGetSerializer):
-#     """Получение информации о подписках пользователя, метод GET."""
-#     is_subscribed = SerializerMethodField()
-#     recipes = SerializerMethodField()
-#     recipes_count = SerializerMethodField()
+class UserSubscriptionsGetSerializer(UserGetSerializer):
+    """Получение информации о подписках пользователя, метод GET."""
+    is_subscribed = SerializerMethodField()
+    recipes = SerializerMethodField()
+    recipes_count = SerializerMethodField()
 
-#     class Meta:
-#         model = User
-#         read_only_fields = (
-#             'first_name', 'last_name',
-#             'username', 'email',
-#             'id', 'is_subscribed',
-#             'recipes', 'recipes_count'
-#         )
+    class Meta:
+        model = User
+        fields = ('email', 'id', 'username', 'first_name',
+                  'last_name', 'is_subscribed', 'recipes', 'recipes_count')
+        read_only_fields = ('email', 'username', 'first_name', 'last_name',
+                            'is_subscribed', 'recipes', 'recipes_count')
 
-#     def get_recipes(self, obj):
-#         request = self.context.get('request')
-#         recipes = obj.recipes.all()
-#         return ShortRecipeGetSerializer(
-#             recipes,
-#             many=True,
-#             context={'request': request}).data
+    def get_recipes(self, obj):
+        request = self.context.get('request')
+        recipes_limit = None
+        if request:
+            recipes_limit = request.query_params.get('recipes_limit')
+        recipes = obj.recipes.all()
+        if recipes_limit:
+            recipes = obj.recipes.all()[:int(recipes_limit)]
+        return ShortRecipeGetSerializer(recipes, many=True,
+                                        context={'request': request}).data
 
-#     def get_recipes_count(self, obj):
-#         return obj.recipes.count()
-
-
-
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
 
 class TagsSerializer(ModelSerializer):
@@ -152,14 +157,6 @@ class RecipeIngredientsSerializer(ModelSerializer):
     class Meta:
         model = RecipeIngredients
         fields = ('id', 'name', 'measurement_unit', 'amount')
-
-
-class ShortRecipeGetSerializer(ModelSerializer):
-    """Получение краткой информации о рецепте (в избранном и корзине)."""
-    class Meta:
-        model = Recipe
-        fields = ('id', 'name',
-                  'image', 'cooking_time',)
 
 
 class RecipeGetSerializer(ModelSerializer):
@@ -275,6 +272,13 @@ class FavoriteSerializer(ModelSerializer):
             )
         ]
 
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        return ShortRecipeGetSerializer(
+            instance.recipe,
+            context={'request': request}
+        ).data
+
 
 class ShoppingCartSerializer(ModelSerializer):
     """Сериализатор для корзины."""
@@ -289,22 +293,9 @@ class ShoppingCartSerializer(ModelSerializer):
             )
         ]
 
-
-class UserSubscriptionsGetSerializer(UserGetSerializer):
-    recipes = RecipeGetSerializer(read_only=True, many=True)
-    recipes_count = SerializerMethodField(read_only=True)
-
-    class Meta(UserGetSerializer.Meta):
-        fields = (
-            'email',
-            'id',
-            'username',
-            'first_name',
-            'last_name',
-            'is_subscribed',
-            'recipes',
-            'recipes_count'
-        )
-
-    def get_recipes_count(self, object):
-        return object.recipes.count()
+    def to_representation(self, instance):
+        request = self.context.get('request')
+        return ShortRecipeGetSerializer(
+            instance.recipe,
+            context={'request': request}
+        ).data
