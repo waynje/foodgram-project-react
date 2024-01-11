@@ -1,4 +1,7 @@
+from django_filters.filters import CharFilter
 from django_filters.rest_framework import FilterSet, filters
+from rest_framework.filters import SearchFilter
+from urllib.parse import unquote
 
 from recipes.models import Ingredient, Recipe, Tag
 
@@ -32,10 +35,25 @@ class RecipeFilter(FilterSet):
         return queryset
 
 
-class IngredientFilter(FilterSet):
-    """Фильтр для ингредиентов."""
-    name = filters.CharFilter(lookup_expr='istartswith')
+# class DecodedCharFilter(CharFilter):
+#     def filter(self, qs, value):
+#         if value:
+#             decoded_value = unquote(value)
+#             return super().filter(qs, decoded_value)
+#         return qs
+
+
+# class IngredientFilter(FilterSet):
+#     name = DecodedCharFilter(lookup_expr='startswith')
+
+#     class Meta:
+#         model = Ingredient
+#         fields = ['name']
+
+
+class IngredientFilter(SearchFilter):
+    search_param = 'name'
 
     class Meta:
         model = Ingredient
-        fields = ('name', )
+        fields = ('name',)

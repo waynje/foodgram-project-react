@@ -1,3 +1,5 @@
+from django.db.models import Sum
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
@@ -6,10 +8,11 @@ from rest_framework.mixins import ListModelMixin
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from rest_framework.viewsets import GenericViewSet, ModelViewSet, ViewSet
 
 from recipes.models import (Favorite, Ingredient, Recipe, Shoppingcart,
-                            Subscription, Tag)
+                            Subscription, Tag, RecipeIngredients)
 from users.models import User
 
 from .filters import IngredientFilter, RecipeFilter
@@ -84,6 +87,28 @@ class RecipeViewSet(ModelViewSet):
         return delete_model_instance(request, Shoppingcart,
                                      recipe, error_message)
 
+    @staticmethod
+    def send_message(ingredients):
+        shopping_list = 'Купить в магазине:'
+        for ingredient in ingredients:
+            shopping_list += (
+                f"\n{ingredient['ingredient__name']} "
+                f"({ingredient['ingredient__measurement_unit']}) - "
+                f"{ingredient['amount']}")
+        file = 'shopping_list.txt'
+        response = HttpResponse(shopping_list, content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename="{file}.txt"'
+        return response
+
+    @action(detail=False, methods=['GET'])
+    def download_shopping_cart(self, request):
+        ingredients = RecipeIngredients.objects.filter(
+            recipe__shopping_list__user=request.user
+        ).order_by('ingredient__name').values(
+            'ingredient__name', 'ingredient__measurement_unit'
+        ).annotate(amount=Sum('amount'))
+        return self.send_message(ingredients)
+
 
 class ShoppingCartViewSet(ShoppingFavoriteMixin):
     """Получение информации о списке покупок."""
@@ -109,7 +134,32 @@ class UserSubscriptionViewSet(ListModelMixin,
     serializer_class = UserSubscriptionsGetSerializer
 
     def get_queryset(self):
-        return User.objects.filter(following__user=self.request.user)
+        return Subscription.objects.filter(user=self.request.user)
+
+
+# class UserSubscribeView(APIView):
+#     """Создание/удаление подписки на пользователя."""
+#     def post(self, request, user_id):
+#         author = get_object_or_404(User, id=user_id)
+#         serializer = UserSubscriptionSerializer(
+#             data={'user': request.user.id, 'author': author.id},
+#             context={'request': request}
+#         )
+#         serializer.is_valid(raise_exception=True)
+#         serializer.save()
+#         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+#     def delete(self, request, user_id):
+#         author = get_object_or_404(User, id=user_id)
+#         if not Subscription.objects.filter(user=request.user,
+#                                            author=author).exists():
+#             return Response(
+#                 {'errors': 'Вы не подписаны на этого пользователя'},
+#                 status=status.HTTP_400_BAD_REQUEST
+#             )
+#         Subscription.objects.get(user=request.user.id,
+#                                  author=user_id).delete()
+#         return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class SubscriptionViewSet(ViewSet):

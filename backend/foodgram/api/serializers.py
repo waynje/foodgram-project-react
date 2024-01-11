@@ -68,31 +68,34 @@ class UserSubscriptionSerializer(ModelSerializer):
         raise ValidationError('Нельзя подписаться на самого себя.')
 
 
-class UserSubscriptionsGetSerializer(UserGetSerializer):
-    """Получение информации о подписках пользователя, метод GET."""
-    is_subscribed = SerializerMethodField()
-    recipes = SerializerMethodField()
-    recipes_count = SerializerMethodField()
+# class UserSubscriptionsGetSerializer(UserGetSerializer):
+#     """Получение информации о подписках пользователя, метод GET."""
+#     is_subscribed = SerializerMethodField()
+#     recipes = SerializerMethodField()
+#     recipes_count = SerializerMethodField()
 
-    class Meta:
-        model = User
-        read_only_fields = (
-            'first_name', 'last_name',
-            'username', 'email',
-            'id', 'is_subscribed',
-            'recipes', 'recipes_count'
-        )
+#     class Meta:
+#         model = User
+#         read_only_fields = (
+#             'first_name', 'last_name',
+#             'username', 'email',
+#             'id', 'is_subscribed',
+#             'recipes', 'recipes_count'
+#         )
 
-    def get_recipes(self, obj):
-        request = self.context.get('request')
-        recipes = obj.recipes.all()
-        return ShortRecipeGetSerializer(
-            recipes,
-            many=True,
-            context={'request': request}).data
+#     def get_recipes(self, obj):
+#         request = self.context.get('request')
+#         recipes = obj.recipes.all()
+#         return ShortRecipeGetSerializer(
+#             recipes,
+#             many=True,
+#             context={'request': request}).data
 
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
+#     def get_recipes_count(self, obj):
+#         return obj.recipes.count()
+
+
+
 
 
 class TagsSerializer(ModelSerializer):
@@ -229,40 +232,6 @@ class RecipePostSerializer(ModelSerializer):
                                    amount=amount))
         RecipeIngredients.objects.bulk_create(ingredient_list)
 
-    # def validate(self, data):
-    #     ingredients_list = []
-    #     for ingredient in data.get('ingredients'):
-    #         if ingredient.get('amount') <= 0:
-    #             raise ValidationError(
-    #                 'Количество не может быть меньше 1'
-    #             )
-    #         ingredients_list.append(ingredient)
-    #     if len(set(ingredients_list)) != len(ingredients_list):
-    #         raise ValidationError(
-    #             'Вы пытаетесь добавить в рецепт два одинаковых ингредиента'
-    #         )
-    #     return data
-
-    # def validate_ingredients(self, value):
-    #     ingredients = value
-    #     if not ingredients:
-    #         raise ValidationError({
-    #             'ingredients': 'Нужен хотя бы 1 ингредиент!'
-    #         })
-    #     ingredients_list = []
-    #     for item in ingredients:
-    #         ingredient = get_object_or_404(Ingredient, id=item['id'])
-    #         if ingredient in ingredients_list:
-    #             raise ValidationError({
-    #                 'ingredients': 'Ингридиенты не повторяются!'
-    #             })
-    #         if int(item['amount']) <= 0:
-    #             raise ValidationError({
-    #                 'amount': 'Количество ингредиента не можеи быть меньше 1!'
-    #             })
-    #         ingredients_list.append(ingredient)
-    #     return value
-
     @transaction.atomic
     def create(self, validated_data):
         ingredients = self.initial_data.pop('ingredients')
@@ -319,3 +288,23 @@ class ShoppingCartSerializer(ModelSerializer):
                 message='Рецепт уже добавлен в список покупок'
             )
         ]
+
+
+class UserSubscriptionsGetSerializer(UserGetSerializer):
+    recipes = RecipeGetSerializer(read_only=True, many=True)
+    recipes_count = SerializerMethodField(read_only=True)
+
+    class Meta(UserGetSerializer.Meta):
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'is_subscribed',
+            'recipes',
+            'recipes_count'
+        )
+
+    def get_recipes_count(self, object):
+        return object.recipes.count()
