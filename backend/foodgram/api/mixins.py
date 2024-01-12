@@ -1,8 +1,9 @@
 from django.shortcuts import get_object_or_404
-from recipes.models import Recipe
 from rest_framework.mixins import CreateModelMixin, DestroyModelMixin
 from rest_framework.permissions import AllowAny
 from rest_framework.viewsets import GenericViewSet, ReadOnlyModelViewSet
+
+from recipes.models import Recipe
 
 
 class ShoppingFavoriteMixin(CreateModelMixin,

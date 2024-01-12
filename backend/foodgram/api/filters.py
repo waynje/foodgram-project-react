@@ -2,6 +2,7 @@ from urllib.parse import unquote
 
 from django_filters.filters import CharFilter
 from django_filters.rest_framework import FilterSet, filters
+
 from recipes.models import Ingredient, Recipe, Tag
 
 
