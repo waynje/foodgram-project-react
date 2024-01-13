@@ -6,7 +6,7 @@ User = get_user_model()
 
 
 class Tag(models.Model):
-    """Модель тега."""
+
     name = models.CharField(
         'Название',
         max_length=56,
@@ -32,7 +32,7 @@ class Tag(models.Model):
 
 
 class Ingredient(models.Model):
-    """Модель ингредиента."""
+
     name = models.CharField(
         'Название',
         max_length=56,
@@ -51,7 +51,7 @@ class Ingredient(models.Model):
 
 
 class Recipe(models.Model):
-    """Модель рецепта, связь с ингредиентами методом многие ко многим."""
+
     author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -94,7 +94,7 @@ class Recipe(models.Model):
 
 
 class RecipeIngredients(models.Model):
-    """Промежуточная таблица, связывающая рецепты и ингредиенты."""
+
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -123,7 +123,7 @@ class RecipeIngredients(models.Model):
 
 
 class Shoppingcart(models.Model):
-    """Модель корзины."""
+
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -145,7 +145,7 @@ class Shoppingcart(models.Model):
 
 
 class Favorite(models.Model):
-    """Модель избранных рецептов."""
+
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
@@ -167,7 +167,7 @@ class Favorite(models.Model):
 
 
 class Subscription(models.Model):
-    """Модель подписки."""
+
     user = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
@@ -192,4 +192,4 @@ class Subscription(models.Model):
         verbose_name_plural = 'Подписки'
 
     def __str__(self):
-        return f'{self.user.usename} подписался на {self.author.username}.'
+        return f'{self.user.username} подписался на {self.author.username}.'
