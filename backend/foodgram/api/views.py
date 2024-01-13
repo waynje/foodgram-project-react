@@ -7,7 +7,6 @@ from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet
 
 from recipes.models import (Favorite, Ingredient, Recipe, Shoppingcart,
@@ -25,13 +24,13 @@ from .serializers import (FavoriteSerializer, IngredientSerializer,
 
 
 class TagsViewSet(TagsIngredientMixin):
-    """Получение информации о тегах."""
+
     queryset = Tag.objects.all()
     serializer_class = TagsSerializer
 
 
 class IngredientViewSet(TagsIngredientMixin):
-    """Получение информации об ингредиентах."""
+
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     filterset_class = IngredientFilter
@@ -39,7 +38,7 @@ class IngredientViewSet(TagsIngredientMixin):
 
 
 class RecipeViewSet(ModelViewSet):
-    """Получение информации о рецептах."""
+
     queryset = Recipe.objects.all()
     filterset_class = RecipeFilter
     filters_backend = (DjangoFilterBackend,)
@@ -129,7 +128,7 @@ class RecipeViewSet(ModelViewSet):
         permission_classes=[IsAuthenticated, ]
     )
     def download_shopping_cart(self, request):
-        """Отправка файла со списком покупок."""
+
         ingredients = RecipeIngredients.objects.filter(
             recipe__shoppingrecipe__user=request.user
         ).values(
@@ -148,6 +147,7 @@ class RecipeViewSet(ModelViewSet):
 
 
 class UserViewSet(BaseUserViewSet):
+
     queryset = User.objects.all()
 
     def get_permissions(self):
@@ -196,7 +196,7 @@ class UserViewSet(BaseUserViewSet):
             UserSubscriptionsGetSerializer(
                 self.paginate_queryset(
                     User.objects.filter(
-                        following__follower=request.user
+                        following__user=self.request.user
                     ),
                 ),
                 many=True,

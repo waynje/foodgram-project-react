@@ -1,6 +1,6 @@
 from django.contrib import admin
 from recipes.models import (Favorite, Ingredient, Recipe, RecipeIngredients,
-                            Shoppingcart, Tag)
+                            Shoppingcart, Tag, Subscription)
 
 EMPTY_VALUE = 'пусто'
 
@@ -56,4 +56,12 @@ class FavoriteAdmin(admin.ModelAdmin):
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ('pk', 'user', 'recipe')
     search_fields = ('user', 'recipe')
+    empty_value_display = EMPTY_VALUE
+
+
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('pk', 'user', 'author')
+    search_fields = ('user', 'author')
+    list_filter = ('user', 'author')
     empty_value_display = EMPTY_VALUE
