@@ -42,9 +42,6 @@ services:
     ports:
       - "80:80"
     volumes:
-      - ./nginx.conf:/etc/nginx/templates/default.conf.template
-      - ../frontend/build:/usr/share/nginx/html/
-      - ../docs/:/usr/share/nginx/html/api/docs/
       - static_foodgram:/usr/share/nginx/html/
       - media_foodgram:/media/
     depends_on:
