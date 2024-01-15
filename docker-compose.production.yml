@@ -40,7 +40,7 @@ services:
     platform: linux/amd64
     image: waynje/foodgram_gateway
     ports:
-      - "80:80"
+      - "9090:80"
     volumes:
       - static_foodgram:/usr/share/nginx/html/
       - media_foodgram:/media/
