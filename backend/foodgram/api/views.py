@@ -75,10 +75,8 @@ class RecipeViewSet(ModelViewSet):
     @action(
         detail=True,
         methods=('POST',),
-        url_name='favorite',
-        url_path='favorite'
     )
-    def add_favorite(self, request, pk):
+    def favorite(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         return RecipeViewSet.create_model_instance(
             request,
@@ -86,7 +84,7 @@ class RecipeViewSet(ModelViewSet):
             FavoriteSerializer
         )
 
-    @add_favorite.mapping.delete
+    @favorite.mapping.delete
     def delete_favorite(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         error_message = 'У вас нет этого рецепта в избранном'
@@ -100,10 +98,8 @@ class RecipeViewSet(ModelViewSet):
     @action(
         detail=True,
         methods=('POST',),
-        url_name='shopping_cart',
-        url_path='shopping_cart'
     )
-    def add_shopping_cart(self, request, pk):
+    def shopping_cart(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         return RecipeViewSet.create_model_instance(
             request,
@@ -111,7 +107,7 @@ class RecipeViewSet(ModelViewSet):
             ShoppingCartSerializer
         )
 
-    @add_shopping_cart.mapping.delete
+    @shopping_cart.mapping.delete
     def delete_shopping_cart(self, request, pk):
         recipe = get_object_or_404(Recipe, id=pk)
         error_message = 'У вас нет этого рецепта в списке покупок'
@@ -157,10 +153,9 @@ class UserViewSet(BaseUserViewSet):
     @action(
         methods=('POST',),
         detail=True,
-        url_path='subscribe',
         permission_classes=(IsAuthenticated,)
     )
-    def add_subscribe(self, request, id=None):
+    def subscribe(self, request, id=None):
         serializer = UserSubscriptionSerializer(
             data={
                 'user': self.request.user.id,
@@ -172,7 +167,7 @@ class UserViewSet(BaseUserViewSet):
         serializer.save()
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-    @add_subscribe.mapping.delete
+    @subscribe.mapping.delete
     def delete_subscribe(self, request, id=None):
         following = get_object_or_404(User, id=id)
         if not Subscription.objects.filter(user=request.user,

@@ -11,12 +11,6 @@ class User(AbstractUser):
         (USER, 'Пользователь'),
         (ADMIN, 'Администратор'),
     )
-    password = models.CharField(
-        'Пароль',
-        max_length=254,
-        blank=False,
-        null=False,
-    )
     role = models.CharField(
         'Роль',
         max_length=20,
