@@ -11,7 +11,7 @@ services:
     platform: linux/amd64
     image: postgres:13
     env_file:
-      - ./.env
+      - .env
     volumes:
       - pg_data_foodgram:/var/lib/postgresql/data/
     
@@ -20,7 +20,7 @@ services:
     platform: linux/amd64
     image: waynje/foodgram_backend
     env_file:
-      - ./.env
+      - .env
     restart: always
     volumes:
       - static_foodgram:/backend_static/
