@@ -18,10 +18,7 @@ services:
 
   backend:
     platform: linux/amd64
-    # image: waynje/foodgram_backend
-    build:
-      context: ../backend
-      dockerfile: Dockerfile
+    image: waynje/foodgram_backend
     env_file:
       - ./.env
     restart: always
@@ -34,16 +31,14 @@ services:
   
   frontend:
     platform: linux/amd64
-    build:
-      context: ../frontend
-      dockerfile: Dockerfile
+    image: waynje/foodgram_frontend
     volumes:
       - static_foodgram:/app/result_build/build/
       
   
   nginx:
     platform: linux/amd64
-    image: nginx:1.19.3
+    image: waynje/foodgram_gateway
     ports:
       - "80:80"
     volumes:
