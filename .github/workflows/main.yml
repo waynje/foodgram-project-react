@@ -59,7 +59,7 @@ jobs:
     name: Push gateway Docker image to DockerHub
     if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
-    needs: tests
+    needs: backend_tests
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
