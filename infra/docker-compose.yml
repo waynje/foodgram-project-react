@@ -18,7 +18,6 @@ services:
 
   backend:
     platform: linux/amd64
-    # image: waynje/foodgram_backend
     build:
       context: ../backend
       dockerfile: Dockerfile
